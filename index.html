@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>关怀版财富自由计算器</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --grey:#6f6f6a; --lgrey:#9b9b95; --line:#e5e5e2;
+    --green:#14532d; --green-soft:#eef4ef; --gold:#b8860b;
+    --bg:#f7f7f5; --card:#ffffff; --warn:#b42318; --warn-bg:#fef3f2;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;overflow-x:hidden;}
+  html{-webkit-text-size-adjust:100%;}
+  body{background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:17px;line-height:1.55;}
+  button,input,select{font-family:inherit;touch-action:manipulation;}
+  input,select{max-width:100%;}
+  .wrap{max-width:680px;margin:0 auto;padding:20px 16px calc(48px + env(safe-area-inset-bottom));
+    padding-left:max(16px, env(safe-area-inset-left));padding-right:max(16px, env(safe-area-inset-right));}
+  header{text-align:center;margin:12px 0 22px;}
+  header h1{font-size:27px;margin:0 0 8px;font-weight:800;}
+  header .sub{color:var(--grey);font-size:15.5px;}
+  header .sub2{color:var(--lgrey);font-size:12.5px;margin-top:6px;line-height:1.55;}
+  .seg{display:flex;gap:8px;margin-bottom:14px;}
+  .seg button{flex:1;min-width:0;padding:14px 4px;border:1px solid var(--line);background:var(--card);
+    border-radius:12px;font-size:16px;font-weight:600;color:var(--grey);cursor:pointer;}
+  .seg button.on{background:var(--green);border-color:var(--green);color:#fff;}
+  .tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .tabs button{flex:1;min-width:0;padding:11px 2px;border:1px solid var(--line);background:var(--card);
+    border-radius:10px;font-size:14.5px;color:var(--grey);cursor:pointer;}
+  .tabs button.on{border-color:var(--green);color:var(--green);font-weight:700;background:var(--green-soft);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px;margin-bottom:14px;}
+  .card h3{margin:0 0 6px;font-size:17.5px;line-height:1.4;}
+  .card .desc{color:var(--grey);font-size:13.5px;margin:0 0 14px;line-height:1.6;}
+  /* 行：手机上标签在上、输入框整宽在下，任何屏宽都不溢出 */
+  .row{display:block;padding:10px 0;border-bottom:1px solid #f0f0ee;}
+  .row:last-of-type{border-bottom:none;}
+  .row label{display:block;color:var(--ink);font-size:15.5px;margin-bottom:8px;line-height:1.45;}
+  .row .hint{display:block;color:var(--lgrey);font-size:12.5px;margin-top:2px;line-height:1.5;}
+  .row input[type=text],.row input[type=number],.row select{
+    display:block;width:100%;min-width:0;padding:12px;border:1px solid var(--line);border-radius:10px;
+    font-size:17px;text-align:right;background:#fff;color:var(--ink);outline:none;}
+  .row select{text-align:left;}
+  .row input:focus,.row select:focus{border-color:var(--green);}
+  .row input:disabled{background:#f3f3f1;color:var(--lgrey);}
+  /* 宽屏恢复左右布局 */
+  @media(min-width:640px){
+    .row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .row label{margin-bottom:0;flex-shrink:0;max-width:58%;}
+    .row input[type=text],.row input[type=number],.row select{width:200px;flex:none;}
+  }
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px;}
+  .presets button{padding:9px 14px;border:1px solid var(--line);background:#fff;border-radius:999px;
+    font-size:14px;color:var(--grey);cursor:pointer;}
+  .presets button.on{border-color:var(--green);color:var(--green);font-weight:700;background:var(--green-soft);}
+  .check{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:12px;background:#faf9f6;
+    font-size:14px;color:var(--grey);margin-top:12px;cursor:pointer;line-height:1.55;}
+  .check input{margin-top:4px;width:18px;height:18px;flex:none;}
+  .warnbox{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:12px 14px;font-size:13.5px;margin-top:12px;line-height:1.55;}
+  .result{margin-top:14px;padding:16px;border-radius:14px;background:var(--green-soft);}
+  .result .rlabel{color:var(--green);font-size:14px;font-weight:600;}
+  .result .rnum{font-size:34px;font-weight:800;color:var(--green);margin:4px 0 10px;word-break:break-all;line-height:1.2;}
+  .split{font-size:14px;color:#4a5d50;}
+  .split div{display:flex;justify-content:space-between;gap:8px;padding:4px 0;}
+  .split b{text-align:right;word-break:break-all;}
+  .formula{color:var(--grey);font-size:13px;margin-top:10px;word-break:break-all;line-height:1.6;}
+  .table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px;}
+  .table th{color:var(--grey);font-weight:500;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);}
+  .table td{padding:9px 6px;border-bottom:1px solid #f0f0ee;word-break:break-word;}
+  .table tr.active td{color:var(--green);font-weight:700;}
+  .table tr[data-rate]{cursor:pointer;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px;}
+  .cards.onecol{grid-template-columns:1fr;}
+  .scard{border:1px solid var(--line);border-radius:14px;padding:14px 12px;background:#fff;cursor:pointer;}
+  .scard.on{border-color:var(--green);box-shadow:0 0 0 1px var(--green);}
+  .scard .t{font-weight:700;font-size:14.5px;line-height:1.4;}
+  .scard .v{color:var(--green);font-weight:800;font-size:19px;margin:6px 0;}
+  .scard .d{color:var(--grey);font-size:12.5px;line-height:1.5;}
+  .btn{display:block;width:100%;padding:15px;border:none;border-radius:12px;background:var(--green);
+    color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:14px;}
+  .btn.ghost{background:#fff;color:var(--green);border:1px solid var(--green);}
+  .btn.small{width:auto;display:inline-block;padding:11px 18px;font-size:14.5px;margin-top:10px;}
+  .addbtn{color:var(--green);font-size:15px;font-weight:600;background:none;border:none;cursor:pointer;padding:12px 0 0;}
+  .inrow{display:flex;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #f0f0ee;}
+  .inrow input{flex:1;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:16px;min-width:0;}
+  .inrow input.amt{width:108px;flex:none;text-align:right;}
+  .inrow .del{border:none;background:none;color:var(--lgrey);font-size:20px;cursor:pointer;padding:6px;}
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #f0f0ee;font-size:15px;}
+  .kv:last-child{border-bottom:none;}
+  .kv b{font-variant-numeric:tabular-nums;text-align:right;word-break:break-all;}
+  .concl{margin-top:12px;padding:14px;border-radius:12px;background:var(--green-soft);color:#244d33;font-size:14.5px;line-height:1.65;word-break:break-all;}
+  details{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;}
+  summary{font-weight:700;font-size:16px;cursor:pointer;line-height:1.5;}
+  details h4{margin:18px 0 8px;font-size:15px;}
+  details p,details li{font-size:13.5px;color:#555;line-height:1.75;}
+  details ol,details ul{padding-left:22px;margin:8px 0;}
+  footer{text-align:center;color:var(--lgrey);font-size:12.5px;margin-top:10px;line-height:1.6;}
+  #overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;z-index:99;
+    align-items:center;justify-content:center;padding:20px;}
+  .ov-card{background:#fff;border-radius:16px;padding:16px;max-width:360px;width:100%;text-align:center;}
+  .ov-card img{width:100%;border-radius:8px;border:1px solid var(--line);}
+  .ov-card p{font-size:14px;color:var(--grey);margin:12px 0 8px;}
+  .ov-card a{color:var(--green);font-size:14px;}
+  .ov-card button{margin-top:12px;width:100%;padding:12px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:15px;cursor:pointer;}
+  .modetog{display:flex;gap:6px;margin-bottom:12px;}
+  .modetog button{flex:1;min-width:0;padding:11px 4px;border:1px solid var(--line);background:#fff;border-radius:10px;font-size:14px;color:var(--grey);cursor:pointer;}
+  .modetog button.on{background:var(--green);color:#fff;border-color:var(--green);}
+  .note-tag{display:inline-block;font-size:11px;color:var(--gold);border:1px solid var(--gold);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:2px;}
+  .care-tag{display:inline-block;font-size:11px;color:#fff;background:var(--green);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:2px;}
+  /* ---- 老人卡片 ---- */
+  .ecard{border:1px solid var(--line);border-radius:14px;padding:14px 12px;margin-bottom:12px;background:#fcfcfb;}
+  .ehead{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+  .ehead input{flex:1;min-width:0;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:16px;font-weight:700;color:var(--ink);outline:none;}
+  .ehead input:focus{border-color:var(--green);}
+  .ehead .del{border:none;background:none;color:var(--lgrey);font-size:24px;cursor:pointer;padding:2px 6px;}
+  .sect{margin:14px 0 4px;font-weight:700;font-size:14.5px;color:#4a5d50;}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0;}
+  .chips button{padding:8px 12px;border:1px solid var(--line);background:#fff;border-radius:999px;
+    font-size:13.5px;color:var(--grey);cursor:pointer;}
+  .chips button.on{border-color:var(--green);color:var(--green);font-weight:700;background:var(--green-soft);}
+  .eres{margin-top:10px;padding:8px 14px;border-radius:12px;background:var(--green-soft);}
+  .eres .kv{border-bottom:1px solid #e3ebe4;font-size:14px;}
+  .eres .kv:last-child{border-bottom:none;}
+  .eres .big{color:var(--green);font-size:17px;}
+  .enote{font-size:12.5px;color:var(--gold);padding:2px 0 6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>关怀版财富自由计算器</h1>
+    <div class="sub">要多少钱 · 怎么达成，一算便知</div>
+    <div class="sub2">关怀版 = 原版财富自由计算器 + 临界值公式新增赡养老人成本 E · 参考值为 2024 年公开统计口径</div>
+  </header>
+
+  <div class="seg">
+    <button id="segF1" class="on" onclick="switchFn('f1')">01 我需要多少钱</button>
+    <button id="segF2" onclick="switchFn('f2')">02 我要怎么达成</button>
+  </div>
+
+  <!-- ========== 功能一 ========== -->
+  <section id="f1">
+    <div class="tabs">
+      <button id="tb-note" class="on" onclick="switchBasis('note')">笔记口径</button>
+      <button id="tb-rule4" onclick="switchBasis('rule4')">4% 法则</button>
+      <button id="tb-life" onclick="switchBasis('life')">一生总成本</button>
+    </div>
+
+    <!-- 笔记口径 -->
+    <div id="panel-note">
+      <div class="modetog">
+        <button id="mFwd" class="on" onclick="switchMode('fwd')">正向：算临界值</button>
+        <button id="mRev" onclick="switchMode('rev')">反向：资产倒推月开销</button>
+      </div>
+
+      <div id="fwdBox">
+        <div class="card">
+          <h3>临界值 = 乘数 × x + k·n + m + h + E<span class="care-tag">关怀版</span></h3>
+          <p class="desc">x 月开销 · k·n 育儿 · m 医疗备用金 · h 房产 · E 赡养老人成本（下方老人清单自动计算）</p>
+
+          <div class="row"><label>实际年收益率（%）<span class="hint">乘数 = 12 ÷ 收益率</span></label>
+            <input type="number" id="in-rate" step="0.1" value="2.5" oninput="ui()"></div>
+          <div class="presets" id="ratePresets"></div>
+
+          <div class="row"><label>每月开销 x（元）<span class="hint">不含买房养娃赡养老人；长租请把租金并入</span></label>
+            <input type="number" id="in-x" value="10000" oninput="ui()"></div>
+          <div class="row"><label>孩子数量 n</label>
+            <input type="number" id="in-n" min="0" max="5" value="1" oninput="ui()"></div>
+          <div class="row"><label>单孩成本 k</label>
+            <select id="sel-k" onchange="kChange()">
+              <option value="note" selected>笔记口径 58 万/孩</option>
+              <option value="urban">育娲·城镇 71.3 万</option>
+              <option value="rural">育娲·乡村 39.2 万</option>
+              <option value="custom">自定义</option>
+            </select></div>
+          <div class="row" id="row-kc" style="display:none"><label>自定义单孩成本（元）</label>
+            <input type="number" id="in-kc" value="580000" oninput="ui()"></div>
+          <div class="row"><label>医疗备用金 m（元）<span class="hint">笔记：一线常见 30–60 万，无上限</span></label>
+            <input type="number" id="in-m" value="300000" oninput="ui()"></div>
+          <div class="row"><label>房产成本 h（元）<span class="hint">目标房产全价；租房填 0</span></label>
+            <input type="number" id="in-h" value="0" oninput="ui()"></div>
+          <div class="row"><label>按面积估算（9935 元/㎡ × 面积）</label>
+            <input type="number" id="in-harea" placeholder="㎡" oninput="hArea()"></div>
+
+          <label class="check"><input type="checkbox" id="in-dedup" onchange="ui()">
+            <span>我的月开销口径已包含居住 / 医疗 / 育儿（如统计局人均消费支出口径），不再叠加 k·n 与 m</span></label>
+          <div id="dedupWarn" class="warnbox" style="display:none">当前月开销口径已含居住/医疗/育儿，育儿与医疗项已清零，请勿重复叠加。（赡养老人项 E 单独计算，不受此开关影响。）</div>
+        </div>
+
+        <!-- ========== 赡养老人成本 E（关怀版新增） ========== -->
+        <div class="card" id="elderCard">
+          <h3>赡养老人成本 E<span class="care-tag">关怀版新增</span></h3>
+          <p class="desc">每位老人独立核算，负值按 0 计：单人年度净赡养成本 = max(0, 五项月支出 − 三项月收入) × 12；单人总成本 = 年净成本 × 余命；E = 逐人求和。不添加老人时 E = 0，与原版结果一致。</p>
+
+          <div class="sect">赡养演示案例（点击一键填入，数值来自《退休人士赡养成本研究》算例）</div>
+          <div class="cards onecol">
+            <div class="scard" id="edemo-0" onclick="applyEDemo(0)">
+              <div class="t">案例 A · 农村双亲（赡养敞口主体）</div><div class="v">合计约 62 万</div>
+              <div class="d">60 岁、自理、城乡居民养老金 246 元/月，余命 19 年；月净缺口 1,361 元，单人约 31 万</div>
+            </div>
+            <div class="scard" id="edemo-1" onclick="applyEDemo(1)">
+              <div class="t">案例 B · 城镇双亲 · 居家失能</div><div class="v">合计约 10.5 万</div>
+              <div class="d">75 岁、余命 4 年；健康阶段基础开支与企业养老金 3,271 元/月相抵，失能后净成本 = 居家护理费约 1,097 元/月</div>
+            </div>
+            <div class="scard" id="edemo-2" onclick="applyEDemo(2)">
+              <div class="t">案例 B · 城镇双亲 · 机构失能</div><div class="v">合计约 41 万</div>
+              <div class="d">同上情景改住养老机构（全国综合养老院均值约 4,280 元/月），净成本 = 机构护理费</div>
+            </div>
+          </div>
+
+          <div class="sect">全局设置</div>
+          <div class="row"><label>老人预期寿命（岁）<span class="hint">国家卫健委口径 79 岁；余命 = 预期寿命 − 老人当前年龄</span></label>
+            <input type="number" id="g-life" value="79" oninput="ui()"></div>
+          <div class="row"><label>长护险护理费折扣系数<span class="hint">未参保填 1.0；已试点长护险地区建议 0.69（研究：长护险使代际经济支持约降 31%）</span></label>
+            <input type="number" id="g-ltc" step="0.01" min="0" max="1" value="1" oninput="ltcInput()"></div>
+          <div class="chips" id="ltcChips"></div>
+          <label class="check"><input type="checkbox" id="g-dyn" onchange="dynToggle()">
+            <span>高级模式：考虑净赡养成本逐年上涨（如医疗、护理价格涨幅高于养老金涨幅）</span></label>
+          <div class="row" id="row-g" style="display:none"><label>年净成本增长率（%）<span class="hint">0 = 静态口径；研究文档建议 1%–2%</span></label>
+            <input type="number" id="g-rate-g" step="0.1" value="0" oninput="ui()"></div>
+
+          <div class="sect">需赡养的退休老人</div>
+          <div id="elderBox"></div>
+          <button class="btn ghost small" onclick="addElder()">＋ 添加一位老人</button>
+
+          <div class="eres" style="margin-top:12px;">
+            <div class="kv"><span>需赡养老人</span><b id="out-E-count">0 位</b></div>
+            <div class="kv"><span><b>家庭赡养总成本 E</b></span><b class="big" id="out-E">0 元</b></div>
+            <div class="formula" id="out-E-formula" style="margin-top:6px;">添加老人后自动计算；未添加时 E = 0，临界值与原版一致</div>
+          </div>
+        </div>
+
+        <div class="card" id="noteResultCard">
+          <div class="result">
+            <div class="rlabel">财富自由临界值 T（乘数 <span id="out-mult">480</span>×）</div>
+            <div class="rnum" id="out-T">—</div>
+            <div class="split" id="out-split"></div>
+            <div class="formula" id="out-formula"></div>
+          </div>
+          <button class="btn" onclick="saveNote()">保存这张结果图</button>
+        </div>
+
+        <div class="card">
+          <h3>乘数敏感性（笔记原表）</h3>
+          <p class="desc">点击任意一行可直接切换收益率。笔记提醒：乘数可在 400–500 区间自行调整，不要把 480 当精确值。</p>
+          <table class="table" id="sensTable"></table>
+        </div>
+
+        <div class="card">
+          <h3>场景速算（笔记算例，点击回填）</h3>
+          <p class="desc">以下算例只回填本人开销相关项，不改动老人清单；若已添加老人，临界值会在算例数值之上叠加 E。</p>
+          <div class="cards">
+            <div class="scard" onclick="applySc(0)"><div class="t">城镇居民人均</div><div class="v">143.5 万</div>
+              <div class="d">月开销 2990 元，口径已含居住/医疗/育儿，不加 k·n 和 m（精确值 143.52 万）</div></div>
+            <div class="scard" onclick="applySc(1)"><div class="t">夫妻两人</div><div class="v">287 万</div>
+              <div class="d">按人均口径翻倍，精确值 287.04 万；笔记约数「约 300 万」</div></div>
+            <div class="scard" onclick="applySc(2)"><div class="t">一线四口之家</div><div class="v">1870 万</div>
+              <div class="d">月开销 1.5 万 + 2 孩各 150 万 + 医疗 150 万 + 房产 700 万</div></div>
+            <div class="scard" onclick="applySc(3)"><div class="t">反向：600 万资产</div><div class="v">月花 1 万</div>
+              <div class="d">预留 1 孩 70 万 + 医疗 50 万，剩余 480 万 ÷ 480 = 每月 1 万元</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="revBox" style="display:none">
+        <div class="card">
+          <h3>反向测算</h3>
+          <p class="desc">可持续月开销 =（现有资产 − 育儿预留 − 医疗预留 − 房产项 − 赡养预留 E）÷ 乘数；E 自动取自「正向」模式下的老人清单。</p>
+          <div class="row"><label>现有资产（元）</label><input type="number" id="rv-assets" value="6000000" oninput="ui()"></div>
+          <div class="row"><label>育儿预留（元）</label><input type="number" id="rv-k" value="700000" oninput="ui()"></div>
+          <div class="row"><label>医疗预留（元）</label><input type="number" id="rv-m" value="500000" oninput="ui()"></div>
+          <div class="row"><label>房产项（元）</label><input type="number" id="rv-h" value="0" oninput="ui()"></div>
+          <div class="row"><label>赡养老人预留 E（元）<span class="hint">自动取自老人清单，在「正向：算临界值」模式下维护</span></label>
+            <input type="number" id="rv-e" value="0" disabled></div>
+          <div class="result">
+            <div class="rlabel">可持续月开销（乘数 <span id="rv-mult">480</span>×）</div>
+            <div class="rnum" id="rv-out">—</div>
+            <div class="formula" id="rv-note"></div>
+          </div>
+          <button class="btn" onclick="saveRev()">保存这张结果图</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4% 法则 -->
+    <div id="panel-rule4" style="display:none">
+      <div class="card">
+        <h3>4% 法则<span class="note-tag">视频口径</span></h3>
+        <p class="desc">财富自由数字 = 年支出 ÷ 4% = 25 倍年支出 = 月开销 × 300（即敏感性表 4.0% 行）。此口径为独立视频口径，不叠加赡养老人项 E。</p>
+        <div class="row"><label>每月开销（元）</label><input type="number" id="r4-x" value="10000" oninput="ui()"></div>
+        <div class="result">
+          <div class="rlabel">财富自由数字（300×月开销）</div>
+          <div class="rnum" id="r4-out">—</div>
+          <div class="formula" id="r4-note"></div>
+        </div>
+        <button class="btn" onclick="saveR4()">保存这张结果图</button>
+      </div>
+    </div>
+
+    <!-- 一生总成本 -->
+    <div id="panel-life" style="display:none">
+      <div class="card">
+        <h3>一生总成本口径</h3>
+        <p class="desc">一生总成本 = 月开销×12×(退休年龄−当前年龄) + 养老总额 + 育儿总额 + 年度健康开销×(预期寿命−当前年龄) + 购房总额；缺口 = 总成本 − 当前资产。此口径为独立口径，不叠加赡养老人项 E。</p>
+        <div class="row"><label>当前年龄</label><input type="number" id="lf-age" value="30" oninput="ui()"></div>
+        <div class="row"><label>退休年龄</label><input type="number" id="lf-retire" value="60" oninput="ui()"></div>
+        <div class="row"><label>预期寿命（国家卫健委 79 岁）</label><input type="number" id="lf-life" value="79" oninput="ui()"></div>
+        <div class="row"><label>每月开销（元）</label><input type="number" id="lf-x" value="8000" oninput="ui()"></div>
+        <div class="row"><label>养老总额（元）</label><input type="number" id="lf-retireT" value="500000" oninput="ui()"></div>
+        <div class="row"><label>育儿总额（元）</label><input type="number" id="lf-childT" value="580000" oninput="ui()"></div>
+        <div class="row"><label>年度健康开销（元）<span class="hint">统计局 2024 全国人均医疗保健 2547 元/年</span></label>
+          <input type="number" id="lf-med" value="2547" oninput="ui()"></div>
+        <div class="row"><label>购房总额（元）</label><input type="number" id="lf-houseT" value="0" oninput="ui()"></div>
+        <div class="row"><label>当前资产（元）</label><input type="number" id="lf-assets" value="0" oninput="ui()"></div>
+        <div class="result">
+          <div class="rlabel">一生总成本</div>
+          <div class="rnum" id="lf-out">—</div>
+          <div class="split" id="lf-gap"></div>
+        </div>
+        <button class="btn" onclick="saveLife()">保存这张结果图</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 功能二 ========== -->
+  <section id="f2" style="display:none">
+    <div class="card">
+      <h3>我的达成路径</h3>
+      <p class="desc">目标默认取功能一「笔记口径」当前临界值（含赡养老人成本 E）；点下方同步按钮可随时把功能一最新的临界值 / 月开销 / 收益率带过来，之后可单独修改。</p>
+
+      <div class="row"><label>目标临界值 T（元）</label><input type="number" id="f2-T" oninput="ui()"></div>
+      <div class="row"><label>当前资产（元）</label><input type="number" id="f2-assets" value="0" oninput="ui()"></div>
+
+      <div style="margin-top:12px;font-weight:700;font-size:14px;">收入来源（每月税后）</div>
+      <div id="incomeRows"></div>
+      <button class="addbtn" onclick="addIncome()">＋ 添加收入来源</button>
+
+      <div class="row" style="margin-top:8px"><label>每月开销（元）</label><input type="number" id="f2-x" oninput="ui()"></div>
+      <div class="row"><label>实际年收益率（%）</label><input type="number" id="f2-rate" step="0.1" value="2.5" oninput="ui()"></div>
+      <button class="btn ghost small" onclick="syncF2()">同步功能一（临界值含 E + 月开销 + 收益率）</button>
+
+      <div id="f2-result" style="margin-top:14px;"></div>
+      <button class="btn" onclick="saveF2()">保存这张结果图</button>
+    </div>
+  </section>
+
+  <!-- ========== 说明区 ========== -->
+  <details>
+    <summary>说明：480 是怎么来的 · 赡养老人成本 E · 未计入事项 · 数据来源</summary>
+    <h4>「480」的推导（小红书笔记口径）</h4>
+    <ol>
+      <li>先扣掉通胀：七八十年的账，只认「实际收益」。</li>
+      <li>存定期跑不赢通胀：一年定期利率 0.95%、五年定期利率 1.3%，核心通胀约 1%。</li>
+      <li>不照搬美股 8% 的收益参考，国内参考：社保基金年化 7.39%（2000–2024）、企业年金年化 6.17%（2007–2024）。</li>
+      <li>再扣 2–3 个点的相关费用（管理费、申赎费）后，普通散户实际到手年化收益约 4%。</li>
+      <li>名义收益率 4–4.5% − 通胀 2% = 实际年化收益率 2–2.5%。</li>
+      <li>最终：一年开销 ÷ 实际收益率 = 12x ÷ 2.5% = 480x（x 为月开销）。换算口诀：每多攒 480 元 = 每月可多花 1 元。</li>
+    </ol>
+    <h4>关怀版新增：赡养老人成本 E</h4>
+    <ol>
+      <li>临界值公式扩展为 T = 乘数 × x + k·n + m + h + E；E 为家庭赡养总成本，逐人独立核算后求和（城乡、健康、收入差异大，不用人均×人数）。</li>
+      <li>单人年度净赡养成本 = max(0, 五项月支出 − 三项月收入) × 12。月度收入已覆盖开支时按 0 计——货币化口径：只算需要子女额外补贴的钱。</li>
+      <li>单人总成本 = 年度净成本 × 余命；余命 = 老人预期寿命 − 当前年龄（默认 79 岁，国家卫健委口径，可调）。</li>
+      <li>五项支出：基本生活费、医疗费、住房费、护理费、其他必要支出；三项收入：退休金、资产性收入、个人劳动收入。</li>
+      <li>反向测算同步扣除 E：可持续月开销 =（资产 − 育儿预留 − 医疗预留 − 房产项 − E）÷ 乘数；功能二「达成路径」的目标 T 也含 E。</li>
+    </ol>
+    <h4>相比赡养版的优化</h4>
+    <ol>
+      <li>新增长护险护理费折扣系数：已试点长期护理保险的地区，护理费可乘以折扣系数（建议 0.69——Qu et al. 2025 发表于 PLOS ONE 的研究显示，长护险使家庭代际经济支持下降约 31%）。</li>
+      <li>与主计算器深度联动：临界值、反向测算、达成路径与结果海报均含 E（赡养版为独立页面，需手工搬运数字）。</li>
+      <li>负值归零、逐人核算、余命口径、年涨幅高级模式沿自赡养版（其思路源自《退休人士赡养成本研究》文档）。</li>
+    </ol>
+    <h4>赡养口径 · 城乡月度支出参考值（元/人/月，2024 年统计局口径换算）</h4>
+    <table class="table">
+      <tr><th>成本项</th><th>城镇</th><th>农村</th></tr>
+      <tr><td>基本生活费（食+衣+日用）</td><td>1,150</td><td>690</td></tr>
+      <tr><td>医疗费 · 全龄口径</td><td>245</td><td>170</td></tr>
+      <tr><td>医疗费 · 老人建议（1.5–2 倍）</td><td>370–490</td><td>250–340</td></tr>
+      <tr><td>住房费</td><td>670</td><td>320</td></tr>
+      <tr><td>护理费 · 自理 / 居家失能</td><td>0 / 约 1,097</td><td>0 / 约 1,097</td></tr>
+      <tr><td>护理费 · 机构失能</td><td>3,360–6,850</td><td>3,360 起</td></tr>
+      <tr><td>其他必要支出 · 保守 / 完整</td><td>490 / 820</td><td>260 / 440</td></tr>
+      <tr><td><b>支出合计（自理，统计局全口径）</b></td><td><b>2,880</b></td><td><b>1,607</b></td></tr>
+    </table>
+    <p>老人卡片默认值采用「自理 + 全口径」：城镇 1,150 / 245 / 670 / 0 / 815，农村 690 / 170 / 320 / 0 / 427，所有项均可逐项覆写。机构护理费：一线约 6,850、新一线约 5,120、三四线约 3,360，全国综合养老院均值约 4,280。收入参考（元/月，2024）：城乡居民养老金约 246、企业退休约 3,270、全体离退休约 3,740、机关事业单位约 6,240；资产性收入城镇约 455 / 农村约 48。</p>
+    <h4>达成路径的口径提示</h4>
+    <p>按时长测算采用月复利定投模型，收益率用「实际收益率」（已扣通胀）；未计入涨薪、奖金等收入增长，也未计入开销随年龄/家庭结构的变化——有收入增长会更快达成，有开销上涨会更慢。</p>
+    <h4>笔记提示未计入</h4>
+    <p>税费；社保养老金（替代率约 40%，会明显压低实际需要准备的本金）；房租上涨；熊市初期的序列风险。</p>
+    <h4>赡养口径提示</h4>
+    <p>一线城市支出建议上浮 30%–50%，欠发达地区可下浮 20%–30%；医疗支出对老人建议按全龄口径的 1.5–2 倍取值；失能/半失能老人约占 60 岁以上人口 15.6%，护理费最容易被低估；2024 年城镇职工养老金替代率约 52%，退休金大概率不能完全覆盖晚年开支，尤其是农村老人与失能阶段。本计算器为货币化口径：未计入亲自照护的时间成本与情感成本；测算结果仅供参考，不构成任何投资建议。</p>
+    <h4>数据来源</h4>
+    <p>笔记口径：小红书笔记《财富自由临界值》（用户提供截图，2026-10）；视频口径：哔哩哔哩 小Lin说《你需要多少钱，才能财富自由？》（2026-10-24）。官方数据：育娲人口《中国生育成本报告2026版》（全国平均约 58 万/孩、城镇 71.3 万、乡村 39.2 万，0–17 岁）；国家统计局 2024 年居民人均消费支出（全国 28227 元/年、城镇 34557、农村 19280）与人均医疗保健支出（全国 2547 元/年、城镇 2925、农村 2012）；2024 年全国新建商品房均价约 9935 元/㎡；国家卫健委人均预期寿命 79 岁。赡养口径：《退休人士赡养成本研究——成本构成、计算公式与城乡参考值（2026 年 10 月）》（飞书云文档，含逐项来源标注）；长护险折扣参考 Qu et al. (2025, PLOS ONE)。</p>
+  </details>
+
+  <footer>以上仅供参考，不构成任何投资建议 · 关怀版 = 原版财富自由计算器 + 赡养老人成本项</footer>
+</div>
+
+<div id="overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="ov-card">
+    <img id="ovImg" alt="结果图">
+    <p>长按图片保存到相册</p>
+    <a id="ovDl" download="关怀版财富自由测算结果.png" href="#">下载图片（电脑端）</a>
+    <button onclick="document.getElementById('overlay').style.display='none'">关闭</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ==CARECALC-MODULE-START== */
+/* ============ 计算核心（纯函数，独立于界面） ============ */
+var Calc = {
+  multiplier: function(rate){ return rate > 0 ? 12 / rate : Infinity; },
+  /* 关怀版扩展：第 7 参 e 为赡养老人成本 E（缺省 0，与原版完全兼容） */
+  threshold: function(x, mult, k, n, m, h, e){ return mult * x + k * n + m + h + (e || 0); },
+  /* 关怀版扩展：第 6 参 e 为赡养老人预留 E（缺省 0，与原版完全兼容） */
+  sustainable: function(assets, kR, mR, hI, mult, e){ return (assets - kR - mR - hI - (e || 0)) / mult; },
+  rule4: function(xMonth){ return xMonth * 300; },
+  lifetimeCost: function(p){
+    return p.x * 12 * Math.max(0, p.retire - p.age) + p.retireT + p.childT
+      + p.med * Math.max(0, p.lifeExp - p.age) + p.houseT;
+  },
+  monthsToTarget: function(T, P, S, annualRate){
+    if (S <= 0) return Infinity;
+    if (T <= P) return 0;
+    if (annualRate === 0) return (T - P) / S;
+    var r = annualRate / 12;
+    return Math.log((T + S / r) / (P + S / r)) / Math.log(1 + r);
+  },
+  requiredSaving: function(T, P, nMonths, annualRate){
+    if (T <= P) return 0;
+    if (annualRate === 0) return (T - P) / nMonths;
+    var r = annualRate / 12, g = Math.pow(1 + r, nMonths);
+    return (T - P * g) * r / (g - 1);
+  }
+};
+
+/* ============ 赡养成本核心（思路沿自赡养版，新增长护险折扣系数） ============ */
+var CareCalc = {
+  clampLtc: function(ltc){
+    if (ltc == null || isNaN(ltc)) return 1;
+    return Math.min(1, Math.max(0, ltc));
+  },
+  expenseTotal: function(e, ltc){
+    var f = CareCalc.clampLtc(ltc);
+    return (+e.live || 0) + (+e.medical || 0) + (+e.housing || 0) + (+e.care || 0) * f + (+e.other || 0);
+  },
+  incomeTotal: function(e){
+    return (+e.pension || 0) + (+e.asset || 0) + (+e.labor || 0);
+  },
+  /* 月度净赡养成本：负值按 0 计（货币化口径） */
+  monthlyNet: function(e, ltc){
+    return Math.max(0, CareCalc.expenseTotal(e, ltc) - CareCalc.incomeTotal(e));
+  },
+  annualNet: function(e, ltc){ return CareCalc.monthlyNet(e, ltc) * 12; },
+  /* 余命 = max(0, 预期寿命 − 当前年龄) */
+  yearsLeft: function(age, lifeExp){ return Math.max(0, lifeExp - age); },
+  /* 单人总赡养成本：g=0 静态 = 年度净成本×余命；g>0 按几何级数 Σ(1+g)^(t-1) */
+  personTotal: function(e, lifeExp, g, ltc){
+    var L = CareCalc.yearsLeft(e.age, lifeExp);
+    var A = CareCalc.annualNet(e, ltc);
+    if (L <= 0 || A <= 0) return 0;
+    if (!g) return A * L;
+    return A * (Math.pow(1 + g, L) - 1) / g;
+  }
+};
+/* ============ 赡养默认参考值（来源：退休人士赡养成本研究文档，2024 统计局口径） ============ */
+var ELDER_DEFAULTS = {
+  urban: { live: 1150, medical: 245, housing: 670, other: 815 }, /* 合计 2,880（自理全口径） */
+  rural: { live: 690, medical: 170, housing: 320, other: 427 }   /* 合计 1,607（自理全口径） */
+};
+var ELDER_CARE = { self: 0, home: 1097, instUrban: 4280, instRural: 3360 };
+var PENSION_PRESETS = [["企业退休", 3270], ["全体离退休", 3740], ["机关事业单位", 6240], ["城乡居民", 246]];
+var LTCI_PRESETS = [["未参保 1.0", 1], ["参保参考 0.69", 0.69]];
+var ELDER_LIFE_DEFAULT = 79;
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { Calc: Calc, CareCalc: CareCalc, ELDER_DEFAULTS: ELDER_DEFAULTS, ELDER_CARE: ELDER_CARE,
+    PENSION_PRESETS: PENSION_PRESETS, LTCI_PRESETS: LTCI_PRESETS, ELDER_LIFE_DEFAULT: ELDER_LIFE_DEFAULT };
+}
+/* ==CARECALC-MODULE-END== */
+
+/* ============ 常量（均已核实来源，见说明区） ============ */
+var K_MAP = { note: 580000, urban: 713000, rural: 392000 };
+var HOUSE_AVG = 9935;
+var SENS_ROWS = [
+  [0.020, "600×", "50 倍年支出"],
+  [0.025, "480×", "40 倍年支出"],
+  [0.030, "400×", "33 倍年支出"],
+  [0.035, "343×", "29 倍年支出"],
+  [0.040, "300×", "25 倍年支出（即 4% 法则）"]
+];
+
+/* ============ 工具函数 ============ */
+function $(id){ return document.getElementById(id); }
+function num(id){ var v = parseFloat($(id).value); return isNaN(v) ? 0 : v; }
+function fmtYuan(v){ return Math.round(v).toLocaleString("zh-CN"); }
+function fmtWan(v){
+  var w = v / 10000;
+  if (w >= 10000) return (w / 10000).toFixed(2) + " 亿元";
+  return (Math.round(w * 10) / 10) + " 万元";
+}
+function fmtMonths(n){
+  if (!isFinite(n)) return "无法达成";
+  if (n > 1200) return "超过 100 年";
+  var total = Math.round(n), y = Math.floor(total / 12), m = total % 12;
+  return y + " 年 " + m + " 个月";
+}
+function reachDate(months){
+  if (!isFinite(months) || months > 1200) return "—";
+  var d = new Date(); d.setMonth(d.getMonth() + Math.round(months));
+  return d.getFullYear() + " 年 " + (d.getMonth() + 1) + " 月";
+}
+function kv(k, v){ return '<div class="kv"><span>' + k + "</span><b>" + v + "</b></div>"; }
+function esc(s){ return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function healthName(h){ return h === "self" ? "自理" : (h === "home" ? "居家失能" : "机构失能"); }
+
+/* ============ 状态读取 ============ */
+function getRate(){ return num("in-rate") / 100; }
+function kValue(){
+  var s = $("sel-k").value;
+  return s === "custom" ? num("in-kc") : K_MAP[s];
+}
+function noteInputs(){
+  var dedup = $("in-dedup").checked;
+  return {
+    mult: Calc.multiplier(getRate()),
+    x: num("in-x"), n: num("in-n"), k: dedup ? 0 : kValue(),
+    m: dedup ? 0 : num("in-m"), h: num("in-h"), dedup: dedup
+  };
+}
+function elderParams(){
+  var dyn = $("g-dyn").checked;
+  return { life: num("g-life"), g: dyn ? num("g-rate-g") / 100 : 0, ltc: CareCalc.clampLtc(num("g-ltc")) };
+}
+function elderTotals(){
+  var q = elderParams(), E = 0;
+  elders.forEach(function(e){ E += CareCalc.personTotal(e, q.life, q.g, q.ltc); });
+  return { E: E, q: q };
+}
+
+/* ============ 界面切换 ============ */
+function switchFn(fn){
+  $("f1").style.display = fn === "f1" ? "" : "none";
+  $("f2").style.display = fn === "f2" ? "" : "none";
+  $("segF1").className = fn === "f1" ? "on" : "";
+  $("segF2").className = fn === "f2" ? "on" : "";
+  if (fn === "f2" && !$("f2-T").value) syncF2(true);
+  ui();
+}
+function switchBasis(b){
+  ["note","rule4","life"].forEach(function(x){
+    $("panel-" + x).style.display = x === b ? "" : "none";
+    $("tb-" + x).className = x === b ? "on" : "";
+  });
+  ui();
+}
+function switchMode(m){
+  $("fwdBox").style.display = m === "fwd" ? "" : "none";
+  $("revBox").style.display = m === "rev" ? "" : "none";
+  $("mFwd").className = m === "fwd" ? "on" : "";
+  $("mRev").className = m === "rev" ? "on" : "";
+  ui();
+}
+function kChange(){
+  $("row-kc").style.display = $("sel-k").value === "custom" ? "" : "none";
+  ui();
+}
+function hArea(){
+  var a = num("in-harea");
+  if (a > 0) $("in-h").value = Math.round(a * HOUSE_AVG);
+  ui();
+}
+
+/* ============ 敏感性表 ============ */
+function renderSens(){
+  var rate = getRate(), html = "<tr><th>实际收益率</th><th>所需乘数</th><th>相当于</th></tr>";
+  SENS_ROWS.forEach(function(r){
+    var active = Math.abs(r[0] - rate) < 1e-9 ? ' class="active"' : "";
+    html += '<tr data-rate="' + r[0] + '"' + active + ' onclick="applyRate(' + r[0] + ')">'
+      + "<td>" + (r[0] * 100).toFixed(1) + "%</td><td>" + r[1] + "</td><td>" + r[2] + "</td></tr>";
+  });
+  $("sensTable").innerHTML = html;
+}
+function renderPresets(){
+  var rate = getRate(), box = $("ratePresets"); box.innerHTML = "";
+  SENS_ROWS.forEach(function(r){
+    var b = document.createElement("button");
+    b.textContent = (r[0] * 100).toFixed(1) + "%";
+    if (Math.abs(r[0] - rate) < 1e-9) b.className = "on";
+    b.onclick = function(){ applyRate(r[0]); };
+    box.appendChild(b);
+  });
+}
+function applyRate(r){ $("in-rate").value = (r * 100).toFixed(1); ui(); }
+
+/* ============ 场景回填 ============ */
+function setV(id, v){ $(id).value = v; }
+function applySc(i){
+  if (i === 0){ setV("in-x", 2990); $("in-dedup").checked = true; applyRate(0.025); }
+  if (i === 1){ setV("in-x", 5980); $("in-dedup").checked = true; applyRate(0.025); }
+  if (i === 2){
+    setV("in-x", 15000); $("in-dedup").checked = false;
+    setV("in-n", 2); $("sel-k").value = "custom"; setV("in-kc", 1500000); $("row-kc").style.display = "";
+    setV("in-m", 1500000); setV("in-h", 7000000); applyRate(0.025);
+  }
+  if (i === 3){
+    applyRate(0.025); setV("rv-assets", 6000000); setV("rv-k", 700000); setV("rv-m", 500000); setV("rv-h", 0);
+    switchMode("rev");
+  }
+  ui();
+}
+
+/* ============ 收入来源 ============ */
+var incomes = [["主业收入", 15000]];
+function renderIncomes(){
+  var box = $("incomeRows"); box.innerHTML = "";
+  incomes.forEach(function(it, idx){
+    var div = document.createElement("div"); div.className = "inrow";
+    var n = document.createElement("input"); n.value = it[0]; n.placeholder = "来源名称";
+    n.oninput = function(){ incomes[idx][0] = n.value; };
+    var a = document.createElement("input"); a.className = "amt"; a.type = "number"; a.value = it[1];
+    a.oninput = function(){ incomes[idx][1] = parseFloat(a.value) || 0; ui(); };
+    var d = document.createElement("button"); d.className = "del"; d.textContent = "×";
+    d.onclick = function(){ incomes.splice(idx, 1); renderIncomes(); ui(); };
+    div.appendChild(n); div.appendChild(a); div.appendChild(d); box.appendChild(div);
+  });
+}
+function addIncome(){ incomes.push(["新收入来源", 0]); renderIncomes(); ui(); }
+function totalIncome(){ return incomes.reduce(function(s, it){ return s + (it[1] || 0); }, 0); }
+/* 关怀版：同步时一并把功能一当前临界值（含 E）带入目标 */
+function noteThreshold(){
+  var p = noteInputs(), et = elderTotals();
+  return isFinite(p.mult) ? Calc.threshold(p.x, p.mult, p.k, p.n, p.m, p.h, et.E) : Infinity;
+}
+function syncF2(silent){
+  var T = noteThreshold();
+  if (isFinite(T)) setV("f2-T", Math.round(T));
+  setV("f2-x", num("in-x")); setV("f2-rate", num("in-rate"));
+  ui();
+}
+
+/* ============ 老人卡片（关怀版新增，思路沿自赡养版） ============ */
+var elders = [];
+var demoActiveE = null;
+
+function careDefault(locale, health){
+  if (health === "self") return ELDER_CARE.self;
+  if (health === "home") return ELDER_CARE.home;
+  return locale === "urban" ? ELDER_CARE.instUrban : ELDER_CARE.instRural;
+}
+function makeElder(o){
+  var locale = o.locale || "urban";
+  var health = o.health || "self";
+  var d = ELDER_DEFAULTS[locale];
+  return {
+    name: o.name || "老人",
+    locale: locale,
+    age: o.age != null ? o.age : 60,
+    health: health,
+    live: o.live != null ? o.live : d.live,
+    medical: o.medical != null ? o.medical : d.medical,
+    housing: o.housing != null ? o.housing : d.housing,
+    care: o.care != null ? o.care : careDefault(locale, health),
+    other: o.other != null ? o.other : d.other,
+    pension: o.pension || 0,
+    asset: o.asset || 0,
+    labor: o.labor || 0
+  };
+}
+function elderInputRow(i, f, label, hint, v){
+  return '<div class="row"><label>' + label + '<span class="hint">' + hint + '</span></label>'
+    + '<input type="number" value="' + v + '" data-e="' + i + '" data-f="' + f + '" oninput="onField(this)"></div>';
+}
+function elderCardHTML(e, i){
+  var h = '<div class="ecard">';
+  h += '<div class="ehead"><input value="' + esc(e.name) + '" data-e="' + i + '" oninput="onName(this)" placeholder="称谓（如 父亲）">'
+    + '<button class="del" onclick="removeElder(' + i + ')">×</button></div>';
+  h += '<div class="row"><label>城乡预设<span class="hint">按 2024 统计局口径填入五项支出</span></label>'
+    + '<select data-e="' + i + '" onchange="onLocale(this)">'
+    + '<option value="urban"' + (e.locale === "urban" ? " selected" : "") + '>城镇</option>'
+    + '<option value="rural"' + (e.locale === "rural" ? " selected" : "") + '>农村</option></select></div>';
+  h += '<div class="row"><label>当前年龄（岁）</label>'
+    + '<input type="number" value="' + e.age + '" data-e="' + i + '" data-f="age" oninput="onField(this)"></div>';
+  h += '<div class="row"><label>健康状态<span class="hint">切换自动更新护理费</span></label>'
+    + '<select data-e="' + i + '" onchange="onHealth(this)">'
+    + '<option value="self"' + (e.health === "self" ? " selected" : "") + '>自理（护理费 0）</option>'
+    + '<option value="home"' + (e.health === "home" ? " selected" : "") + '>居家失能（约 1,097/月）</option>'
+    + '<option value="inst"' + (e.health === "inst" ? " selected" : "") + '>机构失能（' + (e.locale === "urban" ? "约 4,280" : "约 3,360 起") + '/月）</option></select></div>';
+  h += '<div class="sect">月度支出项（元/月，均可覆写；护理费按全局长护险折扣计算）</div>';
+  h += elderInputRow(i, "live", "基本生活费", "食+衣+日用；城镇 1,150 / 农村 690", e.live);
+  h += elderInputRow(i, "medical", "医疗费", e.locale === "urban" ? "全龄口径 245；老人建议 1.5–2 倍（370–490）" : "全龄口径 170；老人建议 1.5–2 倍（250–340）", e.medical);
+  h += elderInputRow(i, "housing", "住房费", "城镇 670 / 农村 320", e.housing);
+  h += elderInputRow(i, "care", "护理费", "自理 0 / 居家约 1,097 / 机构 3,360–6,850", e.care);
+  h += elderInputRow(i, "other", "其他必要支出", "全口径残差：城镇 815 / 农村 427", e.other);
+  h += '<div class="sect">月度收入项（元/月）</div>';
+  h += '<div class="chips">';
+  PENSION_PRESETS.forEach(function(p){
+    h += '<button type="button" class="' + (e.pension === p[1] ? "on" : "") + '" onclick="setPension(' + i + ',' + p[1] + ')">' + p[0] + ' ' + p[1] + '</button>';
+  });
+  h += '</div>';
+  h += elderInputRow(i, "pension", "退休金", "点上方快选或输入自定义值", e.pension);
+  h += elderInputRow(i, "asset", "资产性收入", "参考：城镇约 455 / 农村约 48", e.asset);
+  h += elderInputRow(i, "labor", "个人劳动收入", "再就业等收入", e.labor);
+  h += '<div class="eres" id="eres-' + i + '"></div>';
+  h += '</div>';
+  return h;
+}
+function renderElders(){
+  var h = "";
+  elders.forEach(function(e, i){ h += elderCardHTML(e, i); });
+  $("elderBox").innerHTML = h;
+}
+function renderEDemos(){
+  [0, 1, 2].forEach(function(i){
+    $("edemo-" + i).className = "scard" + (demoActiveE === i ? " on" : "");
+  });
+}
+function markCustomE(){ demoActiveE = null; renderEDemos(); }
+function renderLtcChips(){
+  var ltc = CareCalc.clampLtc(num("g-ltc")), box = $("ltcChips"); box.innerHTML = "";
+  LTCI_PRESETS.forEach(function(p){
+    var b = document.createElement("button");
+    b.textContent = p[0];
+    if (Math.abs(ltc - p[1]) < 1e-9) b.className = "on";
+    b.onclick = function(){ setV("g-ltc", p[1]); ui(); };
+    box.appendChild(b);
+  });
+}
+function ltcInput(){ ui(); }
+function dynToggle(){
+  $("row-g").style.display = $("g-dyn").checked ? "" : "none";
+  ui();
+}
+function onField(el){
+  var i = +el.getAttribute("data-e"), f = el.getAttribute("data-f");
+  elders[i][f] = parseFloat(el.value) || 0;
+  markCustomE(); ui();
+}
+function onName(el){ elders[+el.getAttribute("data-e")].name = el.value; }
+function onLocale(el){
+  var i = +el.getAttribute("data-e"), v = el.value;
+  var e = elders[i];
+  var d = ELDER_DEFAULTS[v];
+  e.locale = v; e.live = d.live; e.medical = d.medical; e.housing = d.housing; e.other = d.other;
+  e.care = careDefault(v, e.health);
+  markCustomE(); renderElders(); ui();
+}
+function onHealth(el){
+  var i = +el.getAttribute("data-e"), v = el.value;
+  var e = elders[i];
+  e.health = v; e.care = careDefault(e.locale, v);
+  markCustomE(); renderElders(); ui();
+}
+function setPension(i, v){
+  elders[i].pension = v;
+  markCustomE(); renderElders(); ui();
+}
+function addElder(){
+  elders.push(makeElder({ name: "老人 " + (elders.length + 1) }));
+  markCustomE(); renderElders(); ui();
+}
+function removeElder(i){
+  elders.splice(i, 1);
+  markCustomE(); renderElders(); ui();
+}
+function demoBUrban(name, health){
+  return makeElder({
+    name: name, locale: "urban", age: 75, health: health,
+    live: 1150, medical: 490, housing: 1005, other: 626,
+    care: health === "home" ? ELDER_CARE.home : ELDER_CARE.instUrban,
+    pension: 3271, asset: 0, labor: 0
+  });
+}
+function applyEDemo(i){
+  $("g-life").value = ELDER_LIFE_DEFAULT;
+  $("g-ltc").value = 1;
+  $("g-dyn").checked = false; $("g-rate-g").value = 0; dynToggle();
+  if (i === 0){
+    elders = [
+      makeElder({ name: "父亲", locale: "rural", age: 60, health: "self", pension: 246 }),
+      makeElder({ name: "母亲", locale: "rural", age: 60, health: "self", pension: 246 })
+    ];
+  } else if (i === 1){
+    elders = [demoBUrban("父亲", "home"), demoBUrban("母亲", "home")];
+  } else {
+    elders = [demoBUrban("父亲", "inst"), demoBUrban("母亲", "inst")];
+  }
+  demoActiveE = i;
+  renderEDemos(); renderElders(); ui();
+}
+function renderElderResults(){
+  var q = elderParams();
+  elders.forEach(function(e, i){
+    var box = $("eres-" + i); if (!box) return;
+    var exp = CareCalc.expenseTotal(e, q.ltc), inc = CareCalc.incomeTotal(e);
+    var net = CareCalc.monthlyNet(e, q.ltc);
+    var annual = CareCalc.annualNet(e, q.ltc);
+    var L = CareCalc.yearsLeft(e.age, q.life);
+    var tot = CareCalc.personTotal(e, q.life, q.g, q.ltc);
+    var h = "";
+    h += kv("月支出（五项合计" + (q.ltc < 1 ? " · 护理费已按长护险 " + q.ltc + " 折扣" : "") + "）", fmtYuan(exp) + " 元");
+    h += kv("月收入（三项合计）", fmtYuan(inc) + " 元");
+    h += kv("月净赡养成本（负值按 0）", fmtYuan(net) + " 元");
+    if (net === 0 && exp < inc) h += '<div class="enote">收入已覆盖开支，货币化赡养成本按 0 计</div>';
+    h += kv("年净赡养成本（×12）", fmtYuan(annual) + " 元");
+    h += kv("余命（" + q.life + " − " + e.age + "）", L + " 年");
+    h += '<div class="kv"><span><b>该老人总赡养成本' + (q.g ? "（含年涨 " + (q.g * 100).toFixed(1) + "%）" : "") + '</b></span><b class="big">' + fmtYuan(tot) + ' 元</b></div>';
+    box.innerHTML = h;
+  });
+}
+
+/* ============ 主渲染 ============ */
+function ui(){
+  /* --- 赡养成本 E --- */
+  var et = elderTotals(), E = et.E;
+  renderElderResults();
+  renderEDemos();
+  renderLtcChips();
+  $("out-E-count").textContent = elders.length + " 位";
+  $("out-E").textContent = elders.length ? fmtWan(E) : "0 元（未添加老人）";
+  $("out-E-formula").textContent = elders.length
+    ? "E = Σ max(0, 五项月支出 − 三项月收入) × 12 × 余命" + (et.q.g ? " · 含年涨 " + (et.q.g * 100).toFixed(1) + "%" : "") + " = " + fmtYuan(E) + " 元"
+    : "添加老人后自动计算；未添加时 E = 0，临界值与原版一致";
+
+  /* --- 笔记口径正向 --- */
+  var p = noteInputs();
+  $("out-mult").textContent = isFinite(p.mult) ? Math.round(p.mult) : "∞";
+  var T = isFinite(p.mult) ? Calc.threshold(p.x, p.mult, p.k, p.n, p.m, p.h, E) : Infinity;
+  $("out-T").textContent = isFinite(T) ? fmtWan(T) : "—";
+  var regular = isFinite(p.mult) ? p.mult * p.x : 0;
+  $("out-split").innerHTML =
+    "<div><span>常规开销项（乘数×x）</span><b>" + fmtWan(regular) + "</b></div>" +
+    "<div><span>育儿项（k·n）</span><b>" + fmtWan(p.k * p.n) + "</b></div>" +
+    "<div><span>医疗项（m）</span><b>" + fmtWan(p.m) + "</b></div>" +
+    "<div><span>房产项（h）</span><b>" + fmtWan(p.h) + "</b></div>" +
+    "<div><span>赡养老人项（E）</span><b>" + fmtWan(E) + "</b></div>";
+  $("out-formula").textContent = "T = " + Math.round(p.mult) + " × " + fmtYuan(p.x) + " + " +
+    fmtYuan(p.k * p.n) + " + " + fmtYuan(p.m) + " + " + fmtYuan(p.h) + " + " + fmtYuan(E);
+  $("dedupWarn").style.display = p.dedup ? "" : "none";
+  $("sel-k").disabled = p.dedup; $("in-kc").disabled = p.dedup; $("in-m").disabled = p.dedup;
+
+  /* --- 反向 --- */
+  var rvMult = p.mult;
+  $("rv-mult").textContent = isFinite(rvMult) ? Math.round(rvMult) : "∞";
+  $("rv-e").value = Math.round(E);
+  var sustain = Calc.sustainable(num("rv-assets"), num("rv-k"), num("rv-m"), num("rv-h"), rvMult, E);
+  if (sustain <= 0){ $("rv-out").textContent = "不足以覆盖"; $("rv-note").textContent = "预留后资产不足以覆盖常规开销，请增加资产或减少预留。"; }
+  else {
+    $("rv-out").textContent = fmtYuan(sustain) + " 元/月";
+    $("rv-note").textContent = (E > 0 ? "已扣除赡养老人预留 E = " + fmtYuan(E) + " 元。" : "")
+      + "（600 万 − 70 万 − 50 万）÷ 480 = 1 万/月 即此公式的特例。";
+  }
+
+  /* --- 4% 法则 --- */
+  var r4 = Calc.rule4(num("r4-x"));
+  $("r4-out").textContent = fmtWan(r4);
+  $("r4-note").textContent = "= 年支出 " + fmtWan(num("r4-x") * 12) + " ÷ 4% = 25 倍年支出";
+
+  /* --- 一生总成本 --- */
+  var lf = { age: num("lf-age"), retire: num("lf-retire"), lifeExp: num("lf-life"), x: num("lf-x"),
+    retireT: num("lf-retireT"), childT: num("lf-childT"), med: num("lf-med"), houseT: num("lf-houseT") };
+  var lifeCost = Calc.lifetimeCost(lf), gap = Math.max(0, lifeCost - num("lf-assets"));
+  $("lf-out").textContent = fmtWan(lifeCost);
+  $("lf-gap").innerHTML = "<div><span>当前资产</span><b>" + fmtWan(num("lf-assets")) + "</b></div>" +
+    "<div><span>还差（缺口）</span><b>" + fmtWan(gap) + "</b></div>";
+
+  renderSens(); renderPresets(); renderF2();
+}
+
+function renderF2(){
+  var T = num("f2-T"), P = num("f2-assets"), x = num("f2-x"), rate = num("f2-rate") / 100;
+  var inc = totalIncome(), S = inc - x;
+  var box = $("f2-result"), html = "";
+  html += '<div class="kv"><span>合计月收入</span><b>' + fmtYuan(inc) + ' 元</b></div>';
+  html += '<div class="kv"><span>每月可储蓄（收入 − 开销）</span><b>' + fmtYuan(Math.max(S, 0)) + ' 元</b></div>';
+  if (S <= 0){
+    html += '<div class="warnbox">当前入不敷出，该口径下无法达成，请先提高收入或降低开销。</div>';
+    box.innerHTML = html; return;
+  }
+  if (T <= P){
+    html += '<div class="concl">当前资产已覆盖目标临界值——已达成财富自由。</div>';
+    box.innerHTML = html; return;
+  }
+  var gapV = T - P;
+  var n0 = Calc.monthsToTarget(T, P, S, 0);
+  var n1 = Calc.monthsToTarget(T, P, S, rate);
+  html += '<div class="kv"><span>资金缺口（T − 资产）</span><b>' + fmtWan(gapV) + '</b></div>';
+  html += '<div class="kv"><span>达成时长 · 静态（不计收益）</span><b>' + fmtMonths(n0) + '</b></div>';
+  html += '<div class="kv"><span>达成时长 · 月复利 ' + (rate * 100).toFixed(1) + '%</span><b>' + fmtMonths(n1)
+    + (isFinite(n1) && n1 <= 1200 ? '（约 ' + reachDate(n1) + ' 达成）' : '') + '</b></div>';
+  html += '<div style="margin-top:12px;font-weight:700;font-size:14px;">目标时长 · 每月需储蓄</div>';
+  html += '<table class="table"><tr><th>目标</th><th>每月需存</th><th>与现在相比</th></tr>';
+  [5, 10, 15, 20].forEach(function(y){
+    var need = Calc.requiredSaving(T, P, y * 12, rate);
+    var diff = need - S;
+    var dtxt = diff > 0 ? "需多存 " + fmtYuan(diff) + " 元" : "已超额 " + fmtYuan(-diff) + " 元";
+    html += "<tr><td>" + y + " 年达成</td><td>" + fmtYuan(need) + " 元</td><td>" + dtxt + "</td></tr>";
+  });
+  html += "</table>";
+  var need10 = Calc.requiredSaving(T, P, 120, rate);
+  html += '<div class="concl">按当前每月存 ' + fmtYuan(S) + ' 元（含 ' + (rate * 100).toFixed(1)
+    + '% 实际收益），约 ' + fmtMonths(n1) + ' 达成；若想 10 年达成，每月需存约 ' + fmtYuan(need10)
+    + ' 元' + (need10 > S ? '，即比现在多存 ' + fmtYuan(need10 - S) + ' 元（提高收入或减少开支）' : '') + '。</div>';
+  box.innerHTML = html;
+}
+
+/* ============ 结果海报（Canvas 本地绘制） ============ */
+function makePoster(title, bigLabel, bigValue, rows, note){
+  var c = document.createElement("canvas"); c.width = 1080; c.height = 1440;
+  var g = c.getContext("2d");
+  g.fillStyle = "#ffffff"; g.fillRect(0, 0, 1080, 1440);
+  g.fillStyle = "#14532d"; g.fillRect(72, 100, 120, 10);
+  g.fillStyle = "#1a1a1a"; g.font = "bold 68px sans-serif"; g.fillText("关怀版财富自由计算器", 72, 210);
+  g.fillStyle = "#8a8a8a"; g.font = "32px sans-serif"; g.fillText(title, 72, 268);
+  g.fillStyle = "#14532d"; g.font = "bold 92px sans-serif"; g.fillText(bigValue, 72, 420);
+  g.fillStyle = "#555555"; g.font = "30px sans-serif"; g.fillText(bigLabel, 72, 472);
+  var y = 570;
+  rows.forEach(function(r){
+    g.fillStyle = "#8a8a8a"; g.font = "34px sans-serif"; g.fillText(r[0], 72, y);
+    g.fillStyle = "#1a1a1a"; g.font = "bold 34px sans-serif"; g.fillText(r[1], 460, y);
+    y += 62;
+  });
+  if (note){ g.fillStyle = "#244d33"; g.font = "30px sans-serif";
+    wrapText(g, note, 72, y + 30, 936, 44); }
+  var d = new Date();
+  g.fillStyle = "#b5b5b0"; g.font = "26px sans-serif";
+  g.fillText(d.getFullYear() + " 年 " + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日测算", 72, 1330);
+  g.fillText("测算结果仅供参考，不构成任何投资建议", 72, 1374);
+  return c.toDataURL("image/png");
+}
+function wrapText(g, text, x, y, maxW, lh){
+  var line = "";
+  for (var i = 0; i < text.length; i++){
+    var test = line + text[i];
+    if (g.measureText(test).width > maxW && line){ g.fillText(line, x, y); y += lh; line = test; }
+    else line = test;
+  }
+  if (line) g.fillText(line, x, y);
+}
+function showPoster(dataUrl){
+  $("ovImg").src = dataUrl; $("ovDl").href = dataUrl;
+  $("overlay").style.display = "flex";
+}
+function saveNote(){
+  var p = noteInputs(), E = elderTotals().E;
+  var T = Calc.threshold(p.x, p.mult, p.k, p.n, p.m, p.h, E);
+  showPoster(makePoster("笔记口径 · 临界值 = 乘数×x + k·n + m + h + E",
+    "财富自由临界值 T（乘数 " + Math.round(p.mult) + "×，实际收益率 " + (getRate() * 100).toFixed(1) + "%）",
+    fmtWan(T),
+    [["常规开销项", fmtWan(p.mult * p.x)], ["育儿项 k·n", fmtWan(p.k * p.n)],
+     ["医疗项 m", fmtWan(p.m)], ["房产项 h", fmtWan(p.h)],
+     ["赡养老人项 E", fmtWan(E)],
+     ["每月开销 x", fmtYuan(p.x) + " 元"]],
+    p.dedup ? "月开销口径已含居住/医疗/育儿，未叠加育儿与医疗项。" : ""));
+}
+function saveRev(){
+  var mult = Calc.multiplier(getRate()), E = elderTotals().E;
+  var s = Calc.sustainable(num("rv-assets"), num("rv-k"), num("rv-m"), num("rv-h"), mult, E);
+  showPoster(makePoster("笔记口径 · 反向测算", "可持续月开销（乘数 " + Math.round(mult) + "×）",
+    s > 0 ? fmtYuan(s) + " 元/月" : "不足以覆盖",
+    [["现有资产", fmtWan(num("rv-assets"))], ["育儿预留", fmtWan(num("rv-k"))],
+     ["医疗预留", fmtWan(num("rv-m"))], ["房产项", fmtWan(num("rv-h"))],
+     ["赡养老人预留 E", fmtWan(E)]], ""));
+}
+function saveR4(){
+  showPoster(makePoster("4% 法则 · 25 倍年支出", "财富自由数字",
+    fmtWan(Calc.rule4(num("r4-x"))),
+    [["每月开销", fmtYuan(num("r4-x")) + " 元"], ["年支出", fmtWan(num("r4-x") * 12)]], ""));
+}
+function saveLife(){
+  var lf = { age: num("lf-age"), retire: num("lf-retire"), lifeExp: num("lf-life"), x: num("lf-x"),
+    retireT: num("lf-retireT"), childT: num("lf-childT"), med: num("lf-med"), houseT: num("lf-houseT") };
+  var cost = Calc.lifetimeCost(lf);
+  showPoster(makePoster("一生总成本口径", "一生总成本",
+    fmtWan(cost),
+    [["当前资产", fmtWan(num("lf-assets"))],
+     ["还差（缺口）", fmtWan(Math.max(0, cost - num("lf-assets")))]], ""));
+}
+function saveF2(){
+  var T = num("f2-T"), P = num("f2-assets"), x = num("f2-x"), rate = num("f2-rate") / 100;
+  var S = totalIncome() - x;
+  var n1 = Calc.monthsToTarget(T, P, S, rate);
+  showPoster(makePoster("我的达成路径", "目标临界值",
+    fmtWan(T),
+    [["当前资产", fmtWan(P)], ["合计月收入", fmtYuan(totalIncome()) + " 元"],
+     ["每月可储蓄", fmtYuan(Math.max(S, 0)) + " 元"], ["资金缺口", fmtWan(Math.max(0, T - P))],
+     ["达成时长（静态）", fmtMonths(Calc.monthsToTarget(T, P, S, 0))],
+     ["达成时长（月复利）", fmtMonths(n1)],
+     ["10 年达成需月存", fmtYuan(Calc.requiredSaving(T, P, 120, rate)) + " 元"]], ""));
+}
+
+/* ============ 初始化 ============ */
+if (typeof document !== "undefined") {
+  (function init(){
+    renderIncomes();
+    renderElders();
+    syncF2(true);
+  })();
+}
+</script>
+</body>
+</html>
